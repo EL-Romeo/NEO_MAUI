@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:viewmodel="clr-namespace:NEO_MAUI.ViewModels"
+             xmlns:models="clr-namespace:NEO_MAUI.Models"
+             xmlns:converters="clr-namespace:NEO_MAUI.Converters"
+             x:Class="NEO_MAUI.MainPage"
+             x:DataType="viewmodel:MainPageViewModel"
+             Title="Dashboard Kendaraan NEO"
+             BackgroundColor="#f4f4f5">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
+            <Style x:Key="PanelStyle" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="White" />
+                <Setter Property="Stroke" Value="#e4e4e7" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="Padding" Value="16" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 10,10,10,10" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid>
+        <ScrollView IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}">
+            <VerticalStackLayout Spacing="16" Padding="16">
+                <!-- Header -->
+                <Border Style="{StaticResource PanelStyle}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                        <Image Source="dotnet_bot.png" HeightRequest="64" WidthRequest="64" Aspect="AspectFit"/>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="Neo Grosir Madiun" FontSize="20" FontAttributes="Bold" TextColor="#18181b"/>
+                            <Label Text="Data Kendaraan Operasional" FontSize="14" TextColor="#71717a"/>
+                        </VerticalStackLayout>
+                        <HorizontalStackLayout Grid.Column="2" Spacing="10" VerticalOptions="Center">
+                            <Button Text="Export Excel" Command="{Binding ExportDataCommand}" />
+                            <Button Text="Kelola Driver" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Driver Tabs -->
+                <CollectionView ItemsSource="{Binding Drivers}" SelectedItem="{Binding SelectedDriver}" SelectionMode="Single" HeightRequest="50">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="5"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Driver">
+                            <Border Padding="20,10" StrokeShape="RoundRectangle 8,8,8,8" Stroke="LightGray" StrokeThickness="1">
+                                <Label Text="{Binding Name}" VerticalOptions="Center" FontAttributes="Bold"/>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Dashboard Content -->
+                <VerticalStackLayout Spacing="16" IsVisible="{Binding SelectedDriver, Converter={StaticResource IsNotNullConverter}}">
+                    <HorizontalStackLayout Spacing="20" HorizontalOptions="End">
+                        <Label Text="Dari:" VerticalOptions="Center"/>
+                        <DatePicker Date="{Binding StartDate}" />
+                        <Label Text="Sampai:" VerticalOptions="Center"/>
+                        <DatePicker Date="{Binding EndDate}" />
+                    </HorizontalStackLayout>
+                    <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="12" RowSpacing="12">
+                        <Border Grid.Column="0" Style="{StaticResource PanelStyle}" Padding="12">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                                <Label Text="TOTAL BIAYA" FontSize="12" TextColor="#71717a"/>
+                                <Label Text="{Binding Stats.TotalCost, StringFormat='Rp {0:N0}'}" FontSize="18" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource PanelStyle}" Padding="12">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                                <Label Text="BIAYA SERVIS" FontSize="12" TextColor="#71717a"/>
+                                <Label Text="{Binding Stats.TotalServiceCost, StringFormat='Rp {0:N0}'}" FontSize="18" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" Style="{StaticResource PanelStyle}" Padding="12">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                                <Label Text="TOTAL JARAK (KM)" FontSize="12" TextColor="#71717a"/>
+                                <Label Text="{Binding Stats.TotalDistance, StringFormat='{0:N0}'}" FontSize="18" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="3" Style="{StaticResource PanelStyle}" Padding="12">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                                <Label Text="KONSUMSI (RP/KM)" FontSize="12" TextColor="#71717a"/>
+                                <Label Text="{Binding Stats.AvgConsumption, StringFormat='Rp {0:N0}'}" FontSize="18" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="4" Style="{StaticResource PanelStyle}" Padding="12">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                                <Label Text="TOTAL LITER" FontSize="12" TextColor="#71717a"/>
+                                <Label Text="{Binding Stats.TotalLiters, StringFormat='{0:N1} L'}" FontSize="18" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                    <!-- DataGrids -->
+                    <Border Style="{StaticResource PanelStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Riwayat BBM &amp; Kilometer" FontSize="16" FontAttributes="Bold"/>
+                            <toolkit:DataGrid ItemsSource="{Binding FuelHistory}" AutoGenerateColumns="False" HeightRequest="300">
+                                <toolkit:DataGrid.Columns>
+                                    <toolkit:DataGridTextColumn Title="Tanggal" Binding="{Binding Date, StringFormat='{0:dd MMM yyyy}'}" Width="1.5*"/>
+                                    <toolkit:DataGridTextColumn Title="Kilometer" Binding="{Binding Kilometer, StringFormat='{0:N0} KM'}" Width="*"/>
+                                    <toolkit:DataGridTextColumn Title="Biaya BBM" Binding="{Binding FuelCost, StringFormat='Rp {0:N0}'}" Width="*"/>
+                                </toolkit:DataGrid.Columns>
+                            </toolkit:DataGrid>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Style="{StaticResource PanelStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Riwayat Servis" FontSize="16" FontAttributes="Bold"/>
+                            <toolkit:DataGrid ItemsSource="{Binding ServiceHistory}" AutoGenerateColumns="False" HeightRequest="200">
+                                <toolkit:DataGrid.Columns>
+                                    <toolkit:DataGridTextColumn Title="Tanggal" Binding="{Binding Date, StringFormat='{0:dd MMM yyyy}'}" Width="*"/>
+                                    <toolkit:DataGridTextColumn Title="Jenis Servis / Keterangan" Binding="{Binding ServiceType}" Width="2*"/>
+                                    <toolkit:DataGridTextColumn Title="Biaya" Binding="{Binding ServiceCost, StringFormat='Rp {0:N0}'}" Width="*"/>
+                                </toolkit:DataGrid.Columns>
+                            </toolkit:DataGrid>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Style="{StaticResource PanelStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Riwayat Muatan" FontSize="16" FontAttributes="Bold"/>
+                            <toolkit:DataGrid ItemsSource="{Binding LoadHistory}" AutoGenerateColumns="False" HeightRequest="200">
+                                <toolkit:DataGrid.Columns>
+                                    <toolkit:DataGridTextColumn Title="Tanggal" Binding="{Binding Date, StringFormat='{0:dd MMM yyyy}'}" Width="*"/>
+                                    <toolkit:DataGridTextColumn Title="Granit (dus)" Binding="{Binding Granit}" Width="*"/>
+                                    <toolkit:DataGridTextColumn Title="Keramik (dus)" Binding="{Binding Keramik}" Width="*"/>
+                                </toolkit:DataGrid.Columns>
+                            </toolkit:DataGrid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+        <ActivityIndicator IsRunning="{Binding IsBusy}" HorizontalOptions="Center" VerticalOptions="Center" Color="Orange" HeightRequest="50" WidthRequest="50"/>
+    </Grid>
+</ContentPage>
